@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Block","The 'Block' struct.  "],["Chain","Putting the 'Chain' in blockchain. "]]});
