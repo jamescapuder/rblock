@@ -1,0 +1,6 @@
+[package]
+name = "rblock"
+version = "0.1.0"
+authors = ["jamescapuder"]
+
+[dependencies]
