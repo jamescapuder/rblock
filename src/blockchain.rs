@@ -3,12 +3,15 @@ use std::io;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::VecDeque;
 use std::fmt;
+use chrono::prelude::*;
 //#[derive(Clone)]
 
 ///The 'Block' struct.  
 pub struct Block{
     ///The block number.
     num: i32,
+    ///Timestamp
+    time: String,
     ///The actual data of the block. Currently can only be a 'String', future work will generalize this to arbitrary data.  
     data: String,
     ///The hash of the previous 'Block' in the 'Chain'. If this is the first block, 'prevHash' is set to 0.
@@ -29,15 +32,16 @@ impl Hash for Block{
     fn hash<H: Hasher>(&self, state: &mut H){
         let mut s = String::new();
         s+=&self.num.to_string();
-        s+=&self.data;
         s+=&self.prevHash.to_string();
+        s+=&self.time;
+        s+=&self.data;
         s.hash(state)
     }
 }
 
 impl fmt::Display for Block{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
-        write!(f, "num: {} \ndata: {} \nprevious hash: {}", self.num, self.data, self.prevHash)
+        write!(f, "num: {} \ntime: {}\ndata: {} \nprevious hash: {}", self.num,self.time,self.data, self.prevHash)
     }
 }
 
@@ -47,7 +51,8 @@ impl Block{
     /// Packages a block number, string data, and hash of previous block into a new block.
     /// This method is used primarily for testing purposes.
     pub fn new(n: i32, d: String, prevh: u64)->Block{
-        Block{num: n, data: d, prevHash: prevh}
+        let dt: DateTime<Utc> = Utc::now();
+        Block{num: n, time:dt.format("%Y-%m-%d %H:%M:%S:%f").to_string(),data: d, prevHash: prevh}
     }
 
     ///Returns the hash of a block.
@@ -68,17 +73,26 @@ impl Chain{
         return this;
     }
 
+    pub fn gen_timestamp()->String{
+        let dt: DateTime<Utc> = Utc::now();
+        dt.format("%Y-%m-%d %H:%M:%S:%f").to_string()
+    }
+
     ///Inserts a new block into the chain given the data for the new block.
     ///
-    /// If this function is called on an empty chain, the genesis block is inserted. Otherwise, we calculate required fields for the new block and push it to the back of the vecdeque. 
+    /// If this function is called on an empty chain, the genesis block is inserted. Otherwise, we calculate required fields for the new block and push it to the back of the vecdeque.
     pub fn insert_block(&mut self, dataStr: String){
         let len = self.lst.len();
         if len==0{
-            let genesis = Block{num: 0, data:dataStr, prevHash:0};
+            let genesis = Block{num: 0, time: Chain::gen_timestamp(),data:dataStr, prevHash:0};
             self.lst.push_back(genesis);
         }else{
             let prevh = self.lst.back_mut().unwrap().get_hash();
-            let newblock = Block{num:len as i32, data:dataStr,prevHash:prevh};
+            let newblock = Block{
+                num:len as i32,
+                time: Chain::gen_timestamp(),
+                data:dataStr,
+                prevHash:prevh};
             self.lst.push_back(newblock);
         }
     }
